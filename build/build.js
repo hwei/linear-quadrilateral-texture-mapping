@@ -1,82 +1,119 @@
-var ColorHelper = (function () {
-    function ColorHelper() {
+var Draggable = (function () {
+    function Draggable(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.dragging = false;
+        this.rollover = false;
+        this.offsetX = 0;
+        this.offsetY = 0;
     }
-    ColorHelper.getColorVector = function (c) {
-        return createVector(red(c), green(c), blue(c));
-    };
-    ColorHelper.rainbowColorBase = function () {
-        return [
-            color('red'),
-            color('orange'),
-            color('yellow'),
-            color('green'),
-            color(38, 58, 150),
-            color('indigo'),
-            color('violet')
-        ];
-    };
-    ColorHelper.getColorsArray = function (total, baseColorArray) {
-        var _this = this;
-        if (baseColorArray === void 0) { baseColorArray = null; }
-        if (baseColorArray == null) {
-            baseColorArray = ColorHelper.rainbowColorBase();
+    Draggable.prototype.over = function (p) {
+        if (p.mouseX > this.x && p.mouseX < this.x + this.w && p.mouseY > this.y && p.mouseY < this.y + this.h) {
+            this.rollover = true;
         }
-        var rainbowColors = baseColorArray.map(function (x) { return _this.getColorVector(x); });
-        ;
-        var colours = new Array();
-        for (var i = 0; i < total; i++) {
-            var colorPosition = i / total;
-            var scaledColorPosition = colorPosition * (rainbowColors.length - 1);
-            var colorIndex = Math.floor(scaledColorPosition);
-            var colorPercentage = scaledColorPosition - colorIndex;
-            var nameColor = this.getColorByPercentage(rainbowColors[colorIndex], rainbowColors[colorIndex + 1], colorPercentage);
-            colours.push(color(nameColor.x, nameColor.y, nameColor.z));
+        else {
+            this.rollover = false;
         }
-        return colours;
     };
-    ColorHelper.getColorByPercentage = function (firstColor, secondColor, percentage) {
-        var firstColorCopy = firstColor.copy();
-        var secondColorCopy = secondColor.copy();
-        var deltaColor = secondColorCopy.sub(firstColorCopy);
-        var scaledDeltaColor = deltaColor.mult(percentage);
-        return firstColorCopy.add(scaledDeltaColor);
+    Draggable.prototype.update = function (p) {
+        if (this.dragging) {
+            this.x = p.mouseX + this.offsetX;
+            this.y = p.mouseY + this.offsetY;
+        }
     };
-    return ColorHelper;
+    Draggable.prototype.show = function (p) {
+        p.stroke(0);
+        if (this.dragging) {
+            p.fill(50);
+        }
+        else if (this.rollover) {
+            p.fill(100);
+        }
+        else {
+            p.fill(175, 200);
+        }
+        p.rect(this.x, this.y, this.w, this.h);
+    };
+    Draggable.prototype.pressed = function (p) {
+        if (p.mouseX > this.x && p.mouseX < this.x + this.w && p.mouseY > this.y && p.mouseY < this.y + this.h) {
+            this.dragging = true;
+            this.offsetX = this.x - p.mouseX;
+            this.offsetY = this.y - p.mouseY;
+        }
+    };
+    Draggable.prototype.released = function () {
+        this.dragging = false;
+    };
+    return Draggable;
 }());
-var numberOfShapes = 15;
-var speed;
-function setup() {
-    console.log("🚀 - Setup initialized - P5 is running");
-    createCanvas(windowWidth, windowHeight);
-    rectMode(CENTER).noFill().frameRate(30);
-    speed = createSlider(0, 15, 3, 1);
-    speed.position(10, 10);
-    speed.style("width", "80px");
-}
-function draw() {
-    background(0);
-    translate(width / 2, height / 2);
-    var colorsArr = ColorHelper.getColorsArray(numberOfShapes);
-    var baseSpeed = (frameCount / 500) * speed.value();
-    for (var i = 0; i < numberOfShapes; i++) {
-        var npoints = 3 + i;
-        var radius = 20 * i;
-        var angle = TWO_PI / npoints;
-        var spin = baseSpeed * (numberOfShapes - i);
-        strokeWeight(3 + i).stroke(colorsArr[i]);
-        push();
-        rotate(spin);
-        beginShape();
-        for (var a = 0; a < TWO_PI; a += angle) {
-            var sx = cos(a) * radius;
-            var sy = sin(a) * radius;
-            vertex(sx, sy);
+var sketch = function (p) {
+    var draggable0 = new Draggable(100, 100, 20, 20);
+    var draggable1 = new Draggable(150, 100, 20, 20);
+    var draggable2 = new Draggable(150, 150, 20, 20);
+    var draggable3 = new Draggable(100, 150, 20, 20);
+    var draggableArray = [draggable0, draggable1, draggable2, draggable3];
+    p.setup = function () {
+        p.createCanvas(p.windowWidth, p.windowHeight);
+    };
+    p.draw = function () {
+        p.background(0);
+        for (var _i = 0, draggableArray_1 = draggableArray; _i < draggableArray_1.length; _i++) {
+            var d = draggableArray_1[_i];
+            d.over(p);
+            d.update(p);
+            d.show(p);
         }
-        endShape(CLOSE);
-        pop();
-    }
-}
-function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
+        p.stroke(255, 0, 0);
+        p.line(draggableArray[0].x, draggableArray[0].y, draggableArray[1].x, draggableArray[1].y);
+        p.stroke(0, 255, 255);
+        p.line(draggableArray[1].x, draggableArray[1].y, draggableArray[2].x, draggableArray[2].y);
+        p.stroke(0, 255, 0);
+        p.line(draggableArray[0].x, draggableArray[0].y, draggableArray[3].x, draggableArray[3].y);
+        p.stroke(255, 0, 255);
+        p.line(draggableArray[3].x, draggableArray[3].y, draggableArray[2].x, draggableArray[2].y);
+        var points = draggableArray.map(function (s) { return p.createVector(s.x, s.y); });
+        var mapping = createMeanValueMapping(points[0], points[1], points[2], points[3]);
+        for (var i = 1; i < 8; ++i) {
+            var a = mapping(0, i / 8);
+            var b = mapping(1, i / 8);
+            p.stroke(255, 0, i / 8 * 255);
+            p.line(a.x, a.y, b.x, b.y);
+        }
+        for (var i = 1; i < 8; ++i) {
+            var a = mapping(i / 8, 0);
+            var b = mapping(i / 8, 1);
+            p.stroke(0, 255, i / 8 * 255);
+            p.line(a.x, a.y, b.x, b.y);
+        }
+    };
+    p.mousePressed = function () {
+        for (var _i = 0, draggableArray_2 = draggableArray; _i < draggableArray_2.length; _i++) {
+            var d = draggableArray_2[_i];
+            d.pressed(p);
+        }
+    };
+    p.mouseReleased = function () {
+        for (var _i = 0, draggableArray_3 = draggableArray; _i < draggableArray_3.length; _i++) {
+            var d = draggableArray_3[_i];
+            d.released();
+        }
+    };
+};
+new p5(sketch);
+function createMeanValueMapping(p00, p10, p11, p01) {
+    return function (u, v) {
+        var a00 = (1 - u) * (1 - v);
+        var a10 = (1 - u) * v;
+        var a11 = u * v;
+        var a01 = u * (1 - v);
+        var r = new p5.Vector();
+        r.add(p5.Vector.mult(p00, a00));
+        r.add(p5.Vector.mult(p10, a10));
+        r.add(p5.Vector.mult(p11, a11));
+        r.add(p5.Vector.mult(p01, a01));
+        return r;
+    };
 }
 //# sourceMappingURL=../sketch/sketch/build.js.map

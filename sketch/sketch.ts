@@ -1,56 +1,81 @@
-// GLOBAL VARS & TYPES
-let numberOfShapes = 15;
-let speed: p5.Element;
 
-// P5 WILL AUTOMATICALLY USE GLOBAL MODE IF A DRAW() FUNCTION IS DEFINED
-function setup() {
-  console.log("🚀 - Setup initialized - P5 is running");
+const sketch = (p: p5) => {
+    const draggable0 = new Draggable(100, 100, 20, 20);
+    const draggable1 = new Draggable(150, 100, 20, 20);
+    const draggable2 = new Draggable(150, 150, 20, 20);
+    const draggable3 = new Draggable(100, 150, 20, 20);
+    const draggableArray = [draggable0, draggable1, draggable2, draggable3];
 
-  // FULLSCREEN CANVAS
-  createCanvas(windowWidth, windowHeight);
+    p.setup = () => {
+        p.createCanvas(p.windowWidth, p.windowHeight);
+        
+    };
 
-  // SETUP SOME OPTIONS
-  rectMode(CENTER).noFill().frameRate(30);
+    p.draw = () => {
+        p.background(0);
+        for (const d of draggableArray) {
+            d.over(p);
+            d.update(p);
+            d.show(p);
+        }
 
-  // SPEED SLIDER
-  speed = createSlider(0, 15, 3, 1);
-  speed.position(10, 10);
-  speed.style("width", "80px");
-}
+        p.stroke(255, 0, 0);
+        p.line(draggableArray[0].x, draggableArray[0].y, draggableArray[1].x, draggableArray[1].y);
+        p.stroke(0, 255, 255);
+        p.line(draggableArray[1].x, draggableArray[1].y, draggableArray[2].x, draggableArray[2].y);
+        p.stroke(0, 255, 0);
+        p.line(draggableArray[0].x, draggableArray[0].y, draggableArray[3].x, draggableArray[3].y);
+        p.stroke(255, 0, 255);
+        p.line(draggableArray[3].x, draggableArray[3].y, draggableArray[2].x, draggableArray[2].y);
+    
+        const points = draggableArray.map(s => p.createVector(s.x, s.y));
+        const mapping = createMeanValueMapping(points[0], points[1], points[2], points[3]);
+        for(let i = 1; i < 8; ++i) {
+            const a = mapping(0, i / 8);
+            const b = mapping(1, i / 8);
+            p.stroke(255, 0, i / 8 * 255);
+            p.line(a.x, a.y, b.x, b.y);
+        }
+        for(let i = 1; i < 8; ++i) {
+            const a = mapping(i / 8, 0);
+            const b = mapping(i / 8, 1);
+            p.stroke(0, 255, i / 8 * 255);
+            p.line(a.x, a.y, b.x, b.y);
+        }
+    
+    };
 
-// p5 WILL HANDLE REQUESTING ANIMATION FRAMES FROM THE BROWSER AND WIL RUN DRAW() EACH ANIMATION FROME
-function draw() {
-  // CLEAR BACKGROUND
-  background(0);
-  // TRANSLATE TO CENTER OF SCREEN
-  translate(width / 2, height / 2);
-
-  const colorsArr = ColorHelper.getColorsArray(numberOfShapes);
-  const baseSpeed = (frameCount / 500) * <number>speed.value();
-  for (var i = 0; i < numberOfShapes; i++) {
-    const npoints = 3 + i;
-    const radius = 20 * i;
-    const angle = TWO_PI / npoints;
-    const spin = baseSpeed * (numberOfShapes - i);
-
-    strokeWeight(3 + i).stroke(colorsArr[i]);
-
-    push();
-    rotate(spin);
-    // DRAW
-    beginShape();
-    for (let a = 0; a < TWO_PI; a += angle) {
-      let sx = cos(a) * radius;
-      let sy = sin(a) * radius;
-      vertex(sx, sy);
+    p.mousePressed = () => {
+        for(const d of draggableArray) {
+            d.pressed(p);
+        }
     }
-    endShape(CLOSE);
-    // END:DRAW
-    pop();
-  }
-}
+    p.mouseReleased = () => {
+        for(const d of draggableArray) {
+            d.released();
+        }
+    }
+};
 
-// p5 WILL AUTO RUN THIS FUNCTION IF THE BROWSER WINDOW SIZE CHANGES
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+new p5(sketch);
+
+function createMeanValueMapping(
+    p00: p5.Vector,
+    p10: p5.Vector,
+    p11: p5.Vector,
+    p01: p5.Vector,
+) {
+
+    return function(u: number, v: number) {
+        var a00 = (1 - u) * (1 - v);
+        var a10 = (1 - u) * v;
+        var a11 = u * v;
+        var a01 = u * (1 - v);
+        var r = new p5.Vector();
+        r.add(p5.Vector.mult(p00, a00));
+        r.add(p5.Vector.mult(p10, a10));
+        r.add(p5.Vector.mult(p11, a11));
+        r.add(p5.Vector.mult(p01, a01));
+        return r;
+    }
 }
