@@ -1,14 +1,14 @@
 {
-  "name": "p5-typescript-starter",
+  "name": "linear-quadrilateral-texture-mapping",
   "version": "1.0.0",
-  "description": "Project to quickly get something working in [p5.js](https://p5js.org/) and [typescript](https://www.typescriptlang.org/)",
+  "description": "A demo for linear quadrilateral texture mapping",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "run-p start-compile start-run",
     "start-compile": "tsc --watch",
     "start-run": "browser-sync start --server -w"
   },
-  "homepage": "https://github.com/Gaweph/p5-typescript-starter#readme",
+  "homepage": "https://github.com/hwei/linear-quadrilateral-texture-mapping#readme",
   "devDependencies": {
     "@types/p5": "^0.9.0",
     "browser-sync": "^2.26.12",
